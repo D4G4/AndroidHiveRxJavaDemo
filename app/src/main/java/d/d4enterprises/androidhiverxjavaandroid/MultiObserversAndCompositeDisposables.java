@@ -8,11 +8,14 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import java.util.ArrayList;
+import java.util.concurrent.Callable;
 
 import io.reactivex.Observable;
 import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.observers.DisposableObserver;
 import io.reactivex.schedulers.Schedulers;
 
 public class MultiObserversAndCompositeDisposables extends AppCompatActivity {
@@ -21,7 +24,6 @@ public class MultiObserversAndCompositeDisposables extends AppCompatActivity {
      * A disposable is used to dispose the Subscription when an Observer no longer
      * wants to listen to the Observable
      */
-    Disposable disposable;
 
     private int count;
 
@@ -29,12 +31,16 @@ public class MultiObserversAndCompositeDisposables extends AppCompatActivity {
     private ArrayList<String> arrayList = new ArrayList<>();
     ListView listView;
 
+    private CompositeDisposable compositeDisposable;
+
     private static final String TAG = MainActivity.class.getSimpleName();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_example__basics);
+        setContentView(R.layout.activity_multi_observers_and_composite_disposables);
+
+        compositeDisposable = new CompositeDisposable();
 
         listView = findViewById(R.id.list_item);
 
@@ -49,33 +55,25 @@ public class MultiObserversAndCompositeDisposables extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (disposable != null)
-            disposable.dispose();
+        compositeDisposable.clear();
     }
 
     private Observable<ArrayList<String>> getAnimalObservable() {
-        //returning Observable.just() will freeze the UI
-        //return Observable.just(getArrayList());
+        return Observable.fromCallable(() -> getArrayList());
+    }
 
-/*        return Observable.fromCallable(new Callable<ArrayList<String>>() {
+    private Observable<ArrayList<String>> getAnimalAllCapsObservable() {
+        return Observable.fromCallable(new Callable<ArrayList<String>>() {
             @Override
             public ArrayList<String> call() throws Exception {
                 return getArrayList();
             }
-        });*/
+        });
 
-        return Observable.fromCallable(() -> getArrayList());
     }
 
-    private Observer<String> getAnimalObserver() {
-        return new Observer<String>() {
-            @Override
-            public void onSubscribe(Disposable disposable) {
-                MultiObserversAndCompositeDisposables.this.disposable = disposable;
-                addItem("onSubscribe");
-                Log.d(TAG, "onSubscribe");
-            }
-
+    private DisposableObserver<String> getAnimalObserver() {
+        return new DisposableObserver<String>() {
             @Override
             public void onNext(String value) {
                 addItem("onNext               -> " + value);
@@ -97,36 +95,38 @@ public class MultiObserversAndCompositeDisposables extends AppCompatActivity {
         };
     }
 
-    private void addItem(String text) {
-        arrayList.add(text);
-        if (adapter != null)
-            adapter.notifyDataSetChanged();
-        scrollToBottom();
+    private DisposableObserver<String> getAnimalAllCapsObserver() {
+        return new DisposableObserver<String>() {
+
+            @Override
+            public void onNext(String value) {
+                addItem("onNext               -> " + value.toUpperCase());
+                Log.d(TAG, "onNext               -> " + value);
+            }
+
+            @Override
+            public void onComplete() {
+                addItem("Completed");
+                Log.d(TAG, "Completed");
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+                addItem("Error    " + throwable.getMessage());
+                Log.e(TAG, "Error    " + throwable.getMessage());
+            }
+        };
     }
 
-    public void subscribe(View view) {
-        /*
-            .filter(new Predicate<String>() {
-                    @Override
-                    public boolean test(String s) throws Exception {
-                        //return (s.toLowerCase().startsWith("q") || s.toLowerCase().startsWith("b"));
-                        return true;
-                    }
-                })
 
-                .flatMapIterable(new Function<ArrayList<String>, Iterable<String>>() {
-                    @Override
-                    public Iterable<String> apply(ArrayList<String> value) throws Exception {
-                        Iterable<String> iterable = value;
-                        return iterable;
-                    }
-                })
-        */
+    public void subscribe1(View view) {
 
         /**
          * flatMapIterable is required for filter to perform a predicateTest over the Iterable items.
+         *
+         * We use {@link Observable#subscribeWith(Observer)} instead of {@link Observable#subscribe(Observer)}
          */
-        getAnimalObservable()
+        compositeDisposable.add(getAnimalObservable()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .flatMapIterable((ArrayList<String> arrayList) -> {
@@ -134,7 +134,22 @@ public class MultiObserversAndCompositeDisposables extends AppCompatActivity {
                     return iterable;
                 })
                 .filter(value -> (value.toLowerCase().startsWith("q") || value.toLowerCase().startsWith("b")))
-                .subscribe(getAnimalObserver());
+                .subscribeWith(getAnimalObserver()));
+    }
+
+    public void subscribe2(View view) {
+        compositeDisposable.add(getAnimalAllCapsObservable()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .flatMapIterable((ArrayList<String> arrayList) -> arrayList)
+                .subscribeWith(getAnimalAllCapsObserver()));
+    }
+
+    private void addItem(String text) {
+        arrayList.add(text);
+        if (adapter != null)
+            adapter.notifyDataSetChanged();
+        scrollToBottom();
     }
 
 
@@ -146,7 +161,7 @@ public class MultiObserversAndCompositeDisposables extends AppCompatActivity {
         for (int i = 0; i < strings.length; i++) {
             arrayList.add(strings[i]);
             try {
-                Thread.sleep(500);
+                Thread.sleep(100);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

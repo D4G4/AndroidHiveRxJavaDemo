@@ -4,43 +4,55 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="d.d4enterprises.androidhiverxjavaandroid.Example_Basics">
+    >
 
 
     <Button
-        android:id="@+id/btn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:onClick="subscribe"
-        android:text="subscribe"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintRight_toRightOf="parent" />
-
-    <Button
-        android:id="@+id/btn2"
+        android:id="@+id/btnShowText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:onClick="showText"
         android:text="Show Text"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent" />
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="parent" />
 
     <Button
-        android:id="@+id/btn3"
+        android:id="@+id/btnClearList"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:onClick="clearList"
         android:text="Clear List"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btnShowText" />
+
+    <Button
+        android:id="@+id/btnSubscribe1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:onClick="subscribe1"
+        android:text="Sub 1"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent" />
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btnClearList" />
+
+    <Button
+        android:id="@+id/btnSubscribe2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:onClick="subscribe2"
+        android:text="Sub 2"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btnSubscribe1" />
 
     <ListView
         android:id="@+id/list_item"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@+id/btn"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toLeftOf="@+id/btnShowText"
         app:layout_constraintTop_toTopOf="parent" />
 
 

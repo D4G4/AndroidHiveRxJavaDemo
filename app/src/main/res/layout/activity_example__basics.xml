@@ -17,7 +17,7 @@
         app:layout_constraintRight_toRightOf="parent" />
 
     <Button
-        android:id="@+id/btn2"
+        android:id="@+id/btnClearList"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:onClick="showText"
@@ -26,7 +26,7 @@
         app:layout_constraintLeft_toLeftOf="parent" />
 
     <Button
-        android:id="@+id/btn3"
+        android:id="@+id/btnSubscribe"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:onClick="clearList"
