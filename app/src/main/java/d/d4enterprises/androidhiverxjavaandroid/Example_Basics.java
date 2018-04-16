@@ -1,4 +1,4 @@
-package d.d4enterprises.toptalrxjavaandroid;
+package d.d4enterprises.androidhiverxjavaandroid;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -10,25 +10,26 @@ import android.widget.ListView;
 import java.util.ArrayList;
 
 import io.reactivex.Observable;
-import io.reactivex.ObservableEmitter;
-import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Function;
-import io.reactivex.functions.Predicate;
 import io.reactivex.schedulers.Schedulers;
 
-public class MainActivity extends AppCompatActivity {
-
-    Observable<ArrayList<String>> animalObservable;
-    Observer<String> animalObserver;
+/**
+ * /**
+ * Basic Observable, Observer, Subscriber example
+ * Observable emits list of animal names
+ * You can see filter() operator is used to filter out the animal names
+ */
+public class Example_Basics extends AppCompatActivity {
 
     /**
      * A disposable is used to dispose the Subscription when an Observer no longer
      * wants to listen to the Observable
      */
     Disposable disposable;
+
+    private int count;
 
     ArrayAdapter<String> adapter;
     private ArrayList<String> arrayList = new ArrayList<>();
@@ -39,18 +40,14 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_example__basics);
 
         listView = findViewById(R.id.list_item);
 
-        adapter = new ArrayAdapter<String>(this,
+        adapter = new ArrayAdapter<>(this,
                 android.R.layout.simple_list_item_1, android.R.id.text1, arrayList);
 
         listView.setAdapter(adapter);
-
-        animalObservable = getAnimalObservable();
-
-        animalObserver = getAnimalObserver();
 
 
     }
@@ -58,18 +55,29 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        disposable.dispose();
+        if (disposable != null)
+            disposable.dispose();
     }
 
     private Observable<ArrayList<String>> getAnimalObservable() {
-        return Observable.just(getArrayList());
+        //returning Observable.just() will freeze the UI
+        //return Observable.just(getArrayList());
+
+/*        return Observable.fromCallable(new Callable<ArrayList<String>>() {
+            @Override
+            public ArrayList<String> call() throws Exception {
+                return getArrayList();
+            }
+        });*/
+
+        return Observable.fromCallable(() -> getArrayList());
     }
 
     private Observer<String> getAnimalObserver() {
         return new Observer<String>() {
             @Override
             public void onSubscribe(Disposable disposable) {
-                MainActivity.this.disposable = disposable;
+                Example_Basics.this.disposable = disposable;
                 addItem("onSubscribe");
                 Log.d(TAG, "onSubscribe");
             }
@@ -99,10 +107,10 @@ public class MainActivity extends AppCompatActivity {
         arrayList.add(text);
         if (adapter != null)
             adapter.notifyDataSetChanged();
+        scrollToBottom();
     }
 
     public void subscribe(View view) {
-
         /*
             .filter(new Predicate<String>() {
                     @Override
@@ -121,7 +129,10 @@ public class MainActivity extends AppCompatActivity {
                 })
         */
 
-        animalObservable
+        /**
+         * flatMapIterable is required for filter to perform a predicateTest over the Iterable items.
+         */
+        getAnimalObservable()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .flatMapIterable((ArrayList<String> arrayList) -> {
@@ -129,7 +140,7 @@ public class MainActivity extends AppCompatActivity {
                     return iterable;
                 })
                 .filter(value -> (value.toLowerCase().startsWith("q") || value.toLowerCase().startsWith("b")))
-                .subscribe(animalObserver);
+                .subscribe(getAnimalObserver());
     }
 
 
@@ -147,5 +158,19 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         return arrayList;
+    }
+
+    public void showText(View view) {
+        addItem("Clicked the button" + count++);
+    }
+
+    public void clearList(View view) {
+        count = 0;
+        arrayList.clear();
+        adapter.notifyDataSetChanged();
+    }
+
+    private void scrollToBottom() {
+        listView.smoothScrollToPosition(arrayList.size() - 1);
     }
 }
