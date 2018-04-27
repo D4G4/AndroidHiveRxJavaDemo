@@ -20,6 +20,10 @@
     <activity android:name=".MultiObserversAndCompositeDisposables"/>
     <activity android:name=".Example_Operators">
     </activity>
+    <activity android:name=".JustFromRangeRepeat">
+    </activity>
+    <activity android:name=".BufferDebounce">
+    </activity>
   </application>
 
 </manifest>
